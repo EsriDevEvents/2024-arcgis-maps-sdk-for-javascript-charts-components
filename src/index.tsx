@@ -54,23 +54,9 @@ root.render(
         </CalciteNavigation>
 
         <CalcitePanel>
-          <div data-panel-id='charts'>
-            <CalciteBlock class='chart-block' collapsible heading='Distribution of Water Measurement Data since 1974'>
-              <ArcgisChartsBoxPlot id='box-plot-1'></ArcgisChartsBoxPlot>
-              <CalciteIcon scale='s' slot='icon' icon='box-chart'></CalciteIcon>
-            </CalciteBlock>
-            <CalciteBlock class='chart-block' collapsible heading='Distribution of Water Measurement Data in 2024'>
-              <ArcgisChartsBoxPlot id='box-plot-2'></ArcgisChartsBoxPlot>
-              <CalciteIcon scale='s' slot='icon' icon='box-chart'></CalciteIcon>
-            </CalciteBlock>
-            <CalciteBlock class='chart-block' collapsible heading='Depth of Water (1974 vs 2024) sized by Saturated Thickness'>
-              <ArcgisChartsScatterPlot id='scatter-plot'></ArcgisChartsScatterPlot>
-              <CalciteIcon scale='s' slot='icon' icon='graph-scatter-plot'></CalciteIcon>
-            </CalciteBlock>
-          </div>
+          <Charts />
         </CalcitePanel>
       </CalciteShellPanel>
     </CalciteShell>
-    {/* <Charts /> */}
   </React.StrictMode>
 );

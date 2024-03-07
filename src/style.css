@@ -6,3 +6,9 @@ arcgis-map {
   height: 100%;
   width: 100%;
 }
+
+calcite-shell-panel[slot='panel-start'] {
+  --calcite-shell-panel-max-width: 80vw;
+  --calcite-shell-panel-width: 640px;
+  --calcite-shell-panel-min-width: 640px;
+}

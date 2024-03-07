@@ -1,5 +1,6 @@
 @import '@arcgis/core/assets/esri/themes/dark/main.css';
 
-.chart-component {
-  height: 800px;
+arcgis-charts-box-plot,
+arcgis-charts-scatter-plot {
+  height: 400px;
 }

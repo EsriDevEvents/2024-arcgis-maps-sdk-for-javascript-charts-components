@@ -1,24 +1,11 @@
-/* Copyright 2024 Esri
- *
- * Licensed under the Apache License Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 import { useEffect, useRef, useCallback } from 'react';
+import { CalciteIcon, CalciteBlock } from '@esri/calcite-components-react';
 
-import { ArcgisChartsActionBar, ArcgisChartsScatterPlot } from '@arcgis/charts-components-react';
+import { ArcgisChartsActionBar, ArcgisChartsBoxPlot, ArcgisChartsScatterPlot } from '@arcgis/charts-components-react';
 import { ScatterPlotModel } from '@arcgis/charts-model';
 
-import { loadFeatureLayer } from '../functions/load-data';
+import { loadWebmap } from '../functions/load-data';
+import type FeatureLayer from '@arcgis/core/layers/FeatureLayer';
 
 import './Charts.css';
 // set the default action bar based on the series type
@@ -37,16 +24,34 @@ function setDefaultActionBar(chartElementId: string, seriesType: string) {
 }
 
 export default function Charts() {
+  const boxPlotRef1 = useRef(null);
+  const boxPlotRef2 = useRef(null);
   const scatterPlotRef = useRef(null);
 
   // useCallback to prevent the function from being recreated when the component rebuilds
   const initializeChart = useCallback(async () => {
-    const featureLayer = await loadFeatureLayer();
+    const webmap = await loadWebmap();
 
+    const aquiferSaturatedThicknessLayer = webmap.findLayerById('18dfc8cf7b7-layer-16') as FeatureLayer;
+    const waterDepthPercentageChangeLayer = webmap.findLayerById('18df37f7e52-layer-67') as FeatureLayer;
+
+    // =================================================================================================
+    // load in two box plots from the webmap/feature layer
+    const boxPlotConfig1 = waterDepthPercentageChangeLayer.charts[0];
+    const boxPlotConfig2 = waterDepthPercentageChangeLayer.charts[1];
+
+    boxPlotRef1.current.config = boxPlotConfig1;
+    boxPlotRef1.current.layer = waterDepthPercentageChangeLayer;
+
+    boxPlotRef2.current.config = boxPlotConfig2;
+    boxPlotRef2.current.layer = waterDepthPercentageChangeLayer;
+
+    // =================================================================================================
+    // create new scatter plot with charts-model
     const scatterPlotParams = {
-      layer: featureLayer,
-      xAxisFieldName: 'Earnings',
-      yAxisFieldName: 'Cost',
+      layer: aquiferSaturatedThicknessLayer,
+      xAxisFieldName: 'YEAR1974',
+      yAxisFieldName: 'YEAR2024',
     };
 
     const scatterPlotModel = new ScatterPlotModel(scatterPlotParams);
@@ -54,7 +59,7 @@ export default function Charts() {
     const config = await scatterPlotModel.config;
 
     scatterPlotRef.current.config = config;
-    scatterPlotRef.current.layer = featureLayer;
+    scatterPlotRef.current.layer = aquiferSaturatedThicknessLayer;
 
     // add event listener when selection is made on the chart to enable/disable action bar buttons
     scatterPlotRef.current.addEventListener('arcgisChartsSelectionComplete', (event: CustomEvent) => {
@@ -80,8 +85,21 @@ export default function Charts() {
   }, [initializeChart]);
 
   return (
-    <ArcgisChartsScatterPlot ref={scatterPlotRef} class='chart-component' id='scatter-plot-chart'>
-      <ArcgisChartsActionBar slot='action-bar' id='scatter-plot-action-bar'></ArcgisChartsActionBar>
-    </ArcgisChartsScatterPlot>
+    <div data-panel-id='charts'>
+      <CalciteBlock class='chart-block' collapsible heading='Distribution of Water Measurement Data since 1974'>
+        <ArcgisChartsBoxPlot ref={boxPlotRef1}></ArcgisChartsBoxPlot>
+        <CalciteIcon scale='s' slot='icon' icon='box-chart'></CalciteIcon>
+      </CalciteBlock>
+      <CalciteBlock class='chart-block' collapsible heading='Distribution of Water Measurement Data in 2024'>
+        <ArcgisChartsBoxPlot ref={boxPlotRef2}></ArcgisChartsBoxPlot>
+        <CalciteIcon scale='s' slot='icon' icon='box-chart'></CalciteIcon>
+      </CalciteBlock>
+      <CalciteBlock class='chart-block' collapsible heading='Depth of Water (1974 vs 2024) sized by Saturated Thickness'>
+        <ArcgisChartsScatterPlot ref={scatterPlotRef}>
+          <ArcgisChartsActionBar slot='action-bar' id='scatter-plot-action-bar'></ArcgisChartsActionBar>
+        </ArcgisChartsScatterPlot>
+        <CalciteIcon scale='s' slot='icon' icon='graph-scatter-plot'></CalciteIcon>
+      </CalciteBlock>
+    </div>
   );
 }
