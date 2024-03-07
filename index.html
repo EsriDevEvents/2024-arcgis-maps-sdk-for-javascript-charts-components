@@ -4,11 +4,63 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Charts components React template</title>
+  <title>2024 Esri Developer Summit - Maps SDK with Charts Components</title>
+  <link id="jsapi-mode-light" rel="stylesheet" href="https://js.arcgis.com/4.29/@arcgis/core/assets/esri/themes/light/main.css" />
+  <script>
+    var esriConfig = {
+      portalUrl: "https://www.arcgis.com",
+    };
+  </script>
 </head>
 
 <body>
-  <div id="root"></div>
+  <div id="root">
+    <calcite-shell id="shell" content-behind>
+      <!-- map container -->
+      <calcite-panel>
+        <arcgis-map id="mapEl" item-id="004fcc67ef7f45a1816714e379bc279b">
+          <arcgis-home position="top-right"></arcgis-home>
+        </arcgis-map>
+      </calcite-panel>
+
+      <!-- Navigation -->
+      <calcite-shell-panel slot="panel-start" display-mode="float">
+        <calcite-navigation class="calcite-mode-dark">
+          <calcite-navigation-logo id="nav-logo" slot="logo" description="Esri Developer Summit 2024"></calcite-navigation-logo>
+          <calcite-navigation slot="navigation-secondary" class="calcite-mode-light">
+            <div slot="content-end" class="content-end-container">
+              <calcite-chip-group label="Map layers" selection-mode="multiple" id="chip-group">
+                <calcite-chip value="1" selected>Aquifer</calcite-chip>
+                <calcite-chip value="2" selected>Wells</calcite-chip>
+              </calcite-chip-group>
+            </div>
+          </calcite-navigation>
+        </calcite-navigation>
+
+        <!-- Charts container -->
+        <calcite-panel>
+          <div data-panel-id="charts">
+            <calcite-block class="chart-block" collapsible heading="Distribution of Water Measurement Data since 1974">
+              <!-- First box plot element -->
+              <arcgis-charts-box-plot id="box-plot-1"></arcgis-charts-box-plot>
+              <calcite-icon scale="s" slot="icon" icon="box-chart"></calcite-icon>
+            </calcite-block>
+            <calcite-block class="chart-block" collapsible heading="Distribution of Water Measurement Data in 2024">
+              <!-- Second box plot element -->
+              <arcgis-charts-box-plot id="box-plot-2"></arcgis-charts-box-plot>
+              <calcite-icon scale="s" slot="icon" icon="box-chart"></calcite-icon>
+            </calcite-block>
+            <calcite-block class="chart-block" collapsible heading="Depth of Water (1974 vs 2024) sized by Saturated Thickness">
+              <!-- Scatter plot element  -->
+              <arcgis-charts-scatter-plot id="scatter-plot"></arcgis-charts-scatter-plot>
+              <calcite-icon scale="s" slot="icon" icon="graph-scatter-plot"></calcite-icon>
+            </calcite-block>
+          </div>
+        </calcite-panel>
+      </calcite-shell-panel>
+    </calcite-shell>
+  </div>
+
   <script type="module" src="./src/index.tsx"></script>
 </body>
 

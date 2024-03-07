@@ -11,7 +11,9 @@
     "@arcgis/charts-components-react": "~4.29.0",
     "@arcgis/charts-model": "~4.29.0",
     "@arcgis/core": "~4.29.0",
-    "@esri/calcite-components-react": "^2.4.0",
+    "@arcgis/map-components": "^4.29.7",
+    "@arcgis/map-components-react": "^4.29.7",
+    "@esri/calcite-components-react": "^2.6.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
