@@ -8,6 +8,7 @@ import { loadWebmap } from '../functions/load-data';
 import type FeatureLayer from '@arcgis/core/layers/FeatureLayer';
 
 import './Charts.css';
+
 // set the default action bar based on the series type
 function setDefaultActionBar(chartElementId: string, seriesType: string) {
   const actionBarElement = document.getElementById(chartElementId) as HTMLArcgisChartsActionBarElement;
@@ -23,17 +24,35 @@ function setDefaultActionBar(chartElementId: string, seriesType: string) {
   }
 }
 
-export default function Charts() {
+export default function Charts({ mapElement }: any) {
   const boxPlotRef1 = useRef(null);
   const boxPlotRef2 = useRef(null);
   const scatterPlotRef = useRef(null);
 
+  useEffect(() => {
+    if (mapElement) {
+      // Use mapElement here...
+      console.log(mapElement);
+    }
+  }, [mapElement]); // Add mapElement to the dependency array
+
   // useCallback to prevent the function from being recreated when the component rebuilds
   const initializeChart = useCallback(async () => {
-    const webmap = await loadWebmap();
+    const webmap = mapElement.map;
+    console.log(webmap);
+
+    const view = mapElement.view;
 
     const aquiferSaturatedThicknessLayer = webmap.findLayerById('18dfc8cf7b7-layer-16') as FeatureLayer;
     const waterDepthPercentageChangeLayer = webmap.findLayerById('18df37f7e52-layer-67') as FeatureLayer;
+
+    const layerView = await view.whenLayerView(waterDepthPercentageChangeLayer);
+
+    // handle selection
+    const handleArcgisChartsSelectionComplete = (event: CustomEvent) => {
+      mapElement.highlightSelect?.remove();
+      mapElement.highlightSelect = layerView.highlight(event.detail.selectionOIDs);
+    };
 
     // =================================================================================================
     // load in two box plots from the webmap/feature layer
@@ -46,12 +65,14 @@ export default function Charts() {
     boxPlotRef2.current.config = boxPlotConfig2;
     boxPlotRef2.current.layer = waterDepthPercentageChangeLayer;
 
+    boxPlotRef1.current.addEventListener('arcgisChartsSelectionComplete', handleArcgisChartsSelectionComplete);
+
     // =================================================================================================
     // create new scatter plot with charts-model
     const scatterPlotParams = {
       layer: aquiferSaturatedThicknessLayer,
       xAxisFieldName: 'YEAR1974',
-      yAxisFieldName: 'YEAR2024',
+      yAxisFieldName: 'YEAR2022',
     };
 
     const scatterPlotModel = new ScatterPlotModel(scatterPlotParams);
@@ -60,6 +81,10 @@ export default function Charts() {
 
     scatterPlotRef.current.config = config;
     scatterPlotRef.current.layer = aquiferSaturatedThicknessLayer;
+
+    // Saving (saving to webmap) ========================================
+    // aquiferSaturatedThicknessLayer.charts.push(config);
+    // webmap.save();
 
     // add event listener when selection is made on the chart to enable/disable action bar buttons
     scatterPlotRef.current.addEventListener('arcgisChartsSelectionComplete', (event: CustomEvent) => {
@@ -77,7 +102,7 @@ export default function Charts() {
 
     // set the default actions for the action bar based on the series type
     setDefaultActionBar('scatter-plot-action-bar', config.series[0].type);
-  }, []);
+  }, [mapElement]);
 
   // Register a function that will execute after the current render cycle
   useEffect(() => {
