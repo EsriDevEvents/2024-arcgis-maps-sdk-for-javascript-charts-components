@@ -9,8 +9,7 @@ import type FeatureLayer from '@arcgis/core/layers/FeatureLayer';
 import './Charts.css';
 
 // set the default action bar based on the series type
-function setDefaultActionBar(actionBarRef: React.MutableRefObject<HTMLArcgisChartsActionBarElement>, seriesType: string) {
-  const actionBarElement = actionBarRef.current;
+function setDefaultActionBar(actionBarElement: HTMLArcgisChartsActionBarElement, seriesType: string) {
 
   if (actionBarElement !== null) {
     actionBarElement.actionBarHideActionsProps = {
@@ -37,6 +36,8 @@ export default function Charts({ mapElement }: ChartsProps) {
 
   // useState on layerView, so the selection eventListener can use it
   const [layerView, setLayerView] = useState(null);
+
+  let highlightSelect: IHandle | undefined;
 
   // function to save the chart configurations to the webmap
   const saveCharts = async () => {
@@ -82,7 +83,7 @@ export default function Charts({ mapElement }: ChartsProps) {
       boxPlotRef2.current.layer = waterDepthPercentageChangeLayer;
 
       // set the default actions for the action bar based on the series type
-      setDefaultActionBar(boxPlotActionBarRef, 'boxPlotSeries');
+      setDefaultActionBar(boxPlotActionBarRef.current, 'boxPlotSeries');
 
       // =================================================================================================
       // create new scatter plot with charts-model
@@ -103,7 +104,7 @@ export default function Charts({ mapElement }: ChartsProps) {
       scatterPlotRef.current.layer = aquiferSaturatedThicknessLayer;
 
       // set the default actions for the action bar based on the series type
-      setDefaultActionBar(scatterPlotActionBarRef, 'scatterSeries');
+      setDefaultActionBar(scatterPlotActionBarRef.current, 'scatterSeries');
     }
   }, [mapElement]);
 
@@ -112,8 +113,8 @@ export default function Charts({ mapElement }: ChartsProps) {
   const handleArcgisChartsSelectionComplete = (actionBarRef: React.RefObject<HTMLArcgisChartsActionBarElement>) => (event: CustomEvent) => {
     const selectionData = event.detail.selectionOIDs;
 
-    mapElement.highlightSelect?.remove();
-    mapElement.highlightSelect = layerView.highlight(selectionData);
+    highlightSelect?.remove();
+    highlightSelect = layerView.highlight(selectionData);
 
     // enabled/disable action bar buttons based on selection
     if (selectionData === undefined || selectionData.length === 0) {

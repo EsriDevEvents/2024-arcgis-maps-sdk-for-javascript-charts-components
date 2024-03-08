@@ -24,7 +24,7 @@ defineMapElements(window, { resourcesUrl: 'https://js.arcgis.com/map-components/
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
 function App() {
-  const [element, setElement] = useState(null);
+  const [element, setElement] = useState<HTMLArcgisMapElement>(null);
 
   return (
     <React.StrictMode>
