@@ -9,7 +9,7 @@ import type FeatureLayer from '@arcgis/core/layers/FeatureLayer';
 import './Charts.css';
 
 // set the default action bar based on the series type
-function setDefaultActionBar(actionBarRef: any, seriesType: string) {
+function setDefaultActionBar(actionBarRef: React.MutableRefObject<HTMLArcgisChartsActionBarElement>, seriesType: string) {
   const actionBarElement = actionBarRef.current;
 
   if (actionBarElement !== null) {
@@ -23,7 +23,10 @@ function setDefaultActionBar(actionBarRef: any, seriesType: string) {
   }
 }
 
-export default function Charts({ mapElement }: any) {
+interface ChartsProps {
+  mapElement: HTMLArcgisMapElement;
+}
+export default function Charts({ mapElement }: ChartsProps) {
   // useRef on the charts components
   const boxPlotRef1 = useRef<HTMLArcgisChartsBoxPlotElement>(null);
   const boxPlotRef2 = useRef<HTMLArcgisChartsBoxPlotElement>(null);
