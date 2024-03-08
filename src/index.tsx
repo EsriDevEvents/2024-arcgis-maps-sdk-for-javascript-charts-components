@@ -1,17 +1,12 @@
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import Charts from './components/Charts';
 import {
   CalciteShellPanel,
-  CalciteIcon,
   CalcitePanel,
   CalciteShell,
   CalciteNavigation,
-  CalciteNavigationLogo,
-  CalciteChipGroup,
-  CalciteChip,
-  CalciteBlock,
-  CalciteButton,
+  CalciteNavigationLogo
 } from '@esri/calcite-components-react';
 import { ArcgisMap, ArcgisHome } from '@arcgis/map-components-react';
 
