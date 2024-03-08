@@ -31,11 +31,13 @@ export default function Charts({ mapElement }: any) {
   const boxPlotActionBarRef = useRef<HTMLArcgisChartsActionBarElement>(null);
   const scatterPlotActionBarRef = useRef<HTMLArcgisChartsActionBarElement>(null);
 
+  // function to save the chart configurations to the webmap
   const saveCharts = async () => {
     if (mapElement !== null) {
       const webmap = await mapElement.map;
       const aquiferSaturatedThicknessLayer = webmap.findLayerById('18dfc8cf7b7-layer-16') as FeatureLayer;
 
+      // save the scatter plot configuration on the feature layer in the webmap
       const scatterPlotConfig = scatterPlotRef.current.config;
       aquiferSaturatedThicknessLayer.charts.push(scatterPlotConfig);
 
@@ -46,18 +48,33 @@ export default function Charts({ mapElement }: any) {
   // useCallback to prevent the function from being recreated when the component rebuilds
   const initializeChart = useCallback(async () => {
     if (mapElement !== null) {
+      // retrieve the map and view from the map element
       const webmap = await mapElement.map;
       const view = await mapElement.view;
 
+      // get the two layers from the webmap
       const aquiferSaturatedThicknessLayer = webmap.findLayerById('18dfc8cf7b7-layer-16') as FeatureLayer;
       const waterDepthPercentageChangeLayer = webmap.findLayerById('18df37f7e52-layer-67') as FeatureLayer;
 
+      // get the layerView for the waterDepthPercentageChangeLayer
       const layerView = await view.whenLayerView(waterDepthPercentageChangeLayer);
 
-      // handle selection
-      const handleArcgisChartsSelectionComplete = (event: CustomEvent) => {
+      // handle selection. First remove the previous selection, then highlight the new selection
+      // and enable/disable action bar buttons based on selection
+      const handleArcgisChartsSelectionComplete = (actionBarRef: React.RefObject<HTMLArcgisChartsActionBarElement>) => (event: CustomEvent) => {
+        const selectionData = event.detail.selectionOIDs;
+
         mapElement.highlightSelect?.remove();
-        mapElement.highlightSelect = layerView.highlight(event.detail.selectionOIDs);
+        mapElement.highlightSelect = layerView.highlight(selectionData);
+
+        // enabled/disable action bar buttons based on selection
+        if (selectionData === undefined || selectionData.length === 0) {
+          actionBarRef.current.disableClearSelection = true;
+          actionBarRef.current.disableFilterBySelection = true;
+        } else {
+          actionBarRef.current.disableClearSelection = false;
+          actionBarRef.current.disableFilterBySelection = false;
+        }
       };
 
       // =================================================================================================
@@ -65,27 +82,18 @@ export default function Charts({ mapElement }: any) {
       const boxPlotConfig1 = waterDepthPercentageChangeLayer.charts[0];
       const boxPlotConfig2 = waterDepthPercentageChangeLayer.charts[1];
 
+      // set the config and layer for box plots
       boxPlotRef1.current.config = boxPlotConfig1;
       boxPlotRef1.current.layer = waterDepthPercentageChangeLayer;
 
       boxPlotRef2.current.config = boxPlotConfig2;
       boxPlotRef2.current.layer = waterDepthPercentageChangeLayer;
 
-      boxPlotRef1.current.addEventListener('arcgisChartsSelectionComplete', handleArcgisChartsSelectionComplete);
-
-      boxPlotRef1.current.addEventListener('arcgisChartsSelectionComplete', (event: CustomEvent) => {
-        const selectionData = event.detail;
-        if (selectionData.selectionOIDs === undefined || selectionData.selectionOIDs.length === 0) {
-          scatterPlotActionBarRef.current.disableClearSelection = true;
-          scatterPlotActionBarRef.current.disableFilterBySelection = true;
-        } else {
-          scatterPlotActionBarRef.current.disableClearSelection = false;
-          scatterPlotActionBarRef.current.disableFilterBySelection = false;
-        }
-      });
-
       // set the default actions for the action bar based on the series type
       setDefaultActionBar(boxPlotActionBarRef, 'boxPlotSeries');
+
+      // add event listener when selection is made on the chart
+      boxPlotRef1.current.addEventListener('arcgisChartsSelectionComplete', handleArcgisChartsSelectionComplete(boxPlotActionBarRef));
 
       // =================================================================================================
       // create new scatter plot with charts-model
@@ -95,27 +103,22 @@ export default function Charts({ mapElement }: any) {
         yAxisFieldName: 'YEAR2014',
       };
 
+      // create a new scatter plot model with the given parameters
       const scatterPlotModel = new ScatterPlotModel(scatterPlotParams);
 
+      // get the configuration from the scatter plot model
       const config = await scatterPlotModel.config;
 
+      // set the config and layer to the scatter plot ref
       scatterPlotRef.current.config = config;
       scatterPlotRef.current.layer = aquiferSaturatedThicknessLayer;
 
-      // add event listener when selection is made on the chart to enable/disable action bar buttons
-      scatterPlotRef.current.addEventListener('arcgisChartsSelectionComplete', (event: CustomEvent) => {
-        const selectionData = event.detail;
-        if (selectionData.selectionOIDs === undefined || selectionData.selectionOIDs.length === 0) {
-          scatterPlotActionBarRef.current.disableClearSelection = true;
-          scatterPlotActionBarRef.current.disableFilterBySelection = true;
-        } else {
-          scatterPlotActionBarRef.current.disableClearSelection = false;
-          scatterPlotActionBarRef.current.disableFilterBySelection = false;
-        }
-      });
-
       // set the default actions for the action bar based on the series type
       setDefaultActionBar(scatterPlotActionBarRef, 'scatterSeries');
+
+      // add event listener when selection is made on the chart
+
+      scatterPlotRef.current.addEventListener('arcgisChartsSelectionComplete', handleArcgisChartsSelectionComplete(scatterPlotActionBarRef));
     }
   }, [mapElement]);
 
