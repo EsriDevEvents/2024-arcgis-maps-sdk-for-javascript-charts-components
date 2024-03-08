@@ -10,7 +10,6 @@ import './Charts.css';
 
 // set the default action bar based on the series type
 function setDefaultActionBar(actionBarElement: HTMLArcgisChartsActionBarElement, seriesType: string) {
-
   if (actionBarElement !== null) {
     actionBarElement.actionBarHideActionsProps = {
       hideRotateChart: seriesType === 'histogramSeries' || seriesType === 'pieSeries' || seriesType === 'scatterSeries',
@@ -42,7 +41,7 @@ export default function Charts({ mapElement }: ChartsProps) {
   // function to save the chart configurations to the webmap
   const saveCharts = async () => {
     if (mapElement !== null) {
-      const webmap = await mapElement.map;
+      const webmap = mapElement.map;
       const aquiferSaturatedThicknessLayer = webmap.findLayerById('18dfc8cf7b7-layer-16') as FeatureLayer;
 
       // save the scatter plot configuration on the feature layer in the webmap
@@ -57,8 +56,8 @@ export default function Charts({ mapElement }: ChartsProps) {
   const initializeChart = useCallback(async () => {
     if (mapElement !== null) {
       // retrieve the map and view from the map element
-      const webmap = await mapElement.map;
-      const view = await mapElement.view;
+      const webmap = mapElement.map;
+      const view = mapElement.view;
 
       // get the two layers from the webmap
       const aquiferSaturatedThicknessLayer = webmap.findLayerById('18dfc8cf7b7-layer-16') as FeatureLayer;
