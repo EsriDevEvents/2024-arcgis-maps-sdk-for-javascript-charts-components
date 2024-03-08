@@ -72,11 +72,9 @@ export default function Charts({ mapElement }: ChartsProps) {
       // Set the configs and layer for the box plots
       boxPlotRef1.current.config = boxPlotConfig1;
       boxPlotRef1.current.layer = waterDepthPercentageChangeLayer;
-      boxPlotRef1.current.selectionData = selectionData;
-
+      
       boxPlotRef2.current.config = boxPlotConfig2;
       boxPlotRef2.current.layer = waterDepthPercentageChangeLayer;
-      boxPlotRef2.current.selectionData = selectionData;
 
       // Set the default actions for the box plot action bar
       setDefaultActionBar(boxPlotActionBarRef.current, 'boxPlotSeries');
@@ -97,7 +95,6 @@ export default function Charts({ mapElement }: ChartsProps) {
       // Set the config and layer for the scatter plot
       scatterPlotRef.current.config = config;
       scatterPlotRef.current.layer = aquiferSaturatedThicknessLayer;
-      scatterPlotRef.current.selectionData = selectionData;
 
       // Set the default actions for the scatter plot action bar
       setDefaultActionBar(scatterPlotActionBarRef.current, 'scatterSeries');
@@ -105,22 +102,18 @@ export default function Charts({ mapElement }: ChartsProps) {
   }, [mapElement]);
 
   // Function to handle the selection complete event
-  const handleArcgisChartsSelectionComplete = (actionBarRef: React.RefObject<HTMLArcgisChartsActionBarElement>) => (event: CustomEvent) => {
-    // Get the selection data from the event detail
-    const selectionData = event.detail.selectionOIDs;
+  const handleArcgisChartsSelectionComplete = (actionBarRef: React.RefObject<HTMLArcgisChartsActionBarElement>) => (event: CustomEvent<HTMLArcgisChartsBarChartElement["selectionData"]>) => {
+    // Get the selection data from the event detail which is of type HTMLArcgisChartsBarChartElement["selectionData"]
+    const selectionOIDs = event.detail.selectionOIDs;
 
-    setSelectionData(selectionData);
-
-    // boxPlotRef1.current.selectionData = selectionData;
-    // boxPlotRef2.current.selectionData = selectionData;
-    // scatterPlotRef.current.selectionData = selectionData;
+    setSelectionData({ selectionOIDs });
 
     // Remove the previous highlight select and set the new one
     highlightSelect?.remove();
-    highlightSelect = layerView.highlight(selectionData);
+    highlightSelect = layerView.highlight(selectionOIDs);
 
     // Enable or disable the clear selection and filter by selection buttons based on the selection data
-    if (selectionData === undefined || selectionData.length === 0) {
+    if (selectionOIDs === undefined || selectionOIDs.length === 0) {
       actionBarRef.current.disableClearSelection = true;
       actionBarRef.current.disableFilterBySelection = true;
     } else {
@@ -141,19 +134,19 @@ export default function Charts({ mapElement }: ChartsProps) {
         Save Charts
       </CalciteButton>
       <CalciteBlock class='chart-block' collapsible heading='Distribution of Water Measurement Data since 1974'>
-        <ArcgisChartsBoxPlot ref={boxPlotRef1} onArcgisChartsSelectionComplete={handleArcgisChartsSelectionComplete(boxPlotActionBarRef)}>
+        <ArcgisChartsBoxPlot ref={boxPlotRef1} selectionData={selectionData} onArcgisChartsSelectionComplete={handleArcgisChartsSelectionComplete(boxPlotActionBarRef)}>
           <ArcgisChartsActionBar slot='action-bar' ref={boxPlotActionBarRef}></ArcgisChartsActionBar>
         </ArcgisChartsBoxPlot>
         <CalciteIcon scale='s' slot='icon' icon='box-chart'></CalciteIcon>
       </CalciteBlock>
       <CalciteBlock class='chart-block' collapsible heading='Distribution of Water Measurement Data in 2024'>
-        <ArcgisChartsBoxPlot ref={boxPlotRef2} onArcgisChartsSelectionComplete={handleArcgisChartsSelectionComplete(boxPlotActionBarRef)}>
+        <ArcgisChartsBoxPlot ref={boxPlotRef2} selectionData={selectionData} onArcgisChartsSelectionComplete={handleArcgisChartsSelectionComplete(boxPlotActionBarRef)}>
           <ArcgisChartsActionBar slot='action-bar' ref={boxPlotActionBarRef}></ArcgisChartsActionBar>
         </ArcgisChartsBoxPlot>
         <CalciteIcon scale='s' slot='icon' icon='box-chart'></CalciteIcon>
       </CalciteBlock>
       <CalciteBlock class='chart-block' collapsible heading='Depth of Water (1974 vs 2024) sized by Saturated Thickness'>
-        <ArcgisChartsScatterPlot ref={scatterPlotRef} onArcgisChartsSelectionComplete={handleArcgisChartsSelectionComplete(scatterPlotActionBarRef)}>
+        <ArcgisChartsScatterPlot ref={scatterPlotRef} selectionData={selectionData}  onArcgisChartsSelectionComplete={handleArcgisChartsSelectionComplete(scatterPlotActionBarRef)}>
           <ArcgisChartsActionBar slot='action-bar' ref={scatterPlotActionBarRef}></ArcgisChartsActionBar>
         </ArcgisChartsScatterPlot>
         <CalciteIcon scale='s' slot='icon' icon='graph-scatter-plot'></CalciteIcon>
