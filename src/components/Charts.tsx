@@ -26,6 +26,9 @@ export default function Charts({ mapElement }: ChartsProps) {
   // Define the highlight select
   let highlightSelect: IHandle | undefined;
 
+  // useState on selectionData, so the it can be used to pass selectionData between charts
+  const [selectionData, setSelectionData] = useState(null);
+
   // Function to save the charts
   const saveCharts = async () => {
     if (mapElement !== null) {
@@ -69,9 +72,11 @@ export default function Charts({ mapElement }: ChartsProps) {
       // Set the configs and layer for the box plots
       boxPlotRef1.current.config = boxPlotConfig1;
       boxPlotRef1.current.layer = waterDepthPercentageChangeLayer;
+      boxPlotRef1.current.selectionData = selectionData;
 
       boxPlotRef2.current.config = boxPlotConfig2;
       boxPlotRef2.current.layer = waterDepthPercentageChangeLayer;
+      boxPlotRef2.current.selectionData = selectionData;
 
       // Set the default actions for the box plot action bar
       setDefaultActionBar(boxPlotActionBarRef.current, 'boxPlotSeries');
@@ -92,6 +97,7 @@ export default function Charts({ mapElement }: ChartsProps) {
       // Set the config and layer for the scatter plot
       scatterPlotRef.current.config = config;
       scatterPlotRef.current.layer = aquiferSaturatedThicknessLayer;
+      scatterPlotRef.current.selectionData = selectionData;
 
       // Set the default actions for the scatter plot action bar
       setDefaultActionBar(scatterPlotActionBarRef.current, 'scatterSeries');
@@ -102,6 +108,12 @@ export default function Charts({ mapElement }: ChartsProps) {
   const handleArcgisChartsSelectionComplete = (actionBarRef: React.RefObject<HTMLArcgisChartsActionBarElement>) => (event: CustomEvent) => {
     // Get the selection data from the event detail
     const selectionData = event.detail.selectionOIDs;
+
+    setSelectionData(selectionData);
+
+    // boxPlotRef1.current.selectionData = selectionData;
+    // boxPlotRef2.current.selectionData = selectionData;
+    // scatterPlotRef.current.selectionData = selectionData;
 
     // Remove the previous highlight select and set the new one
     highlightSelect?.remove();
