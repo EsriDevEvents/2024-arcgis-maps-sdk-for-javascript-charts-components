@@ -48,10 +48,11 @@ function App() {
 
         <CalciteShellPanel slot='panel-start' display-mode='float'>
           <CalciteNavigation class='calcite-mode-dark'>
-            <CalciteNavigationLogo id='nav-logo' slot='logo' description='Esri Developer Summit 2024'></CalciteNavigationLogo>
-            {/* <CalciteNavigation slot='navigation-secondary' class='calcite-mode-light'>
-              <div slot='content-end' className='content-end-container'></div>
-            </CalciteNavigation> */}
+            <CalciteNavigationLogo
+              id='nav-logo'
+              slot='logo'
+              description='Building Apps with ArcGIS Maps SDK for JavaScript Charts Components'
+            ></CalciteNavigationLogo>
           </CalciteNavigation>
 
           <CalcitePanel>

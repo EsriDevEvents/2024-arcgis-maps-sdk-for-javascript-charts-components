@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { CalciteIcon, CalciteBlock, CalciteButton } from '@esri/calcite-components-react';
 
 import { ArcgisChartsActionBar, ArcgisChartsBoxPlot, ArcgisChartsScatterPlot } from '@arcgis/charts-components-react';
@@ -24,12 +24,16 @@ function setDefaultActionBar(actionBarRef: any, seriesType: string) {
 }
 
 export default function Charts({ mapElement }: any) {
+  // useRef on the charts components
   const boxPlotRef1 = useRef<HTMLArcgisChartsBoxPlotElement>(null);
   const boxPlotRef2 = useRef<HTMLArcgisChartsBoxPlotElement>(null);
   const scatterPlotRef = useRef<HTMLArcgisChartsScatterPlotElement>(null);
 
   const boxPlotActionBarRef = useRef<HTMLArcgisChartsActionBarElement>(null);
   const scatterPlotActionBarRef = useRef<HTMLArcgisChartsActionBarElement>(null);
+
+  // useState on layerView, so the selection eventListener can use it
+  const [layerView, setLayerView] = useState(null);
 
   // function to save the chart configurations to the webmap
   const saveCharts = async () => {
@@ -59,23 +63,8 @@ export default function Charts({ mapElement }: any) {
       // get the layerView for the waterDepthPercentageChangeLayer
       const layerView = await view.whenLayerView(waterDepthPercentageChangeLayer);
 
-      // handle selection. First remove the previous selection, then highlight the new selection
-      // and enable/disable action bar buttons based on selection
-      const handleArcgisChartsSelectionComplete = (actionBarRef: React.RefObject<HTMLArcgisChartsActionBarElement>) => (event: CustomEvent) => {
-        const selectionData = event.detail.selectionOIDs;
-
-        mapElement.highlightSelect?.remove();
-        mapElement.highlightSelect = layerView.highlight(selectionData);
-
-        // enabled/disable action bar buttons based on selection
-        if (selectionData === undefined || selectionData.length === 0) {
-          actionBarRef.current.disableClearSelection = true;
-          actionBarRef.current.disableFilterBySelection = true;
-        } else {
-          actionBarRef.current.disableClearSelection = false;
-          actionBarRef.current.disableFilterBySelection = false;
-        }
-      };
+      // set the layerView so it can be used in the rest of the component
+      setLayerView(layerView);
 
       // =================================================================================================
       // load in two box plots from the webmap/feature layer
@@ -91,9 +80,6 @@ export default function Charts({ mapElement }: any) {
 
       // set the default actions for the action bar based on the series type
       setDefaultActionBar(boxPlotActionBarRef, 'boxPlotSeries');
-
-      // add event listener when selection is made on the chart
-      boxPlotRef1.current.addEventListener('arcgisChartsSelectionComplete', handleArcgisChartsSelectionComplete(boxPlotActionBarRef));
 
       // =================================================================================================
       // create new scatter plot with charts-model
@@ -115,12 +101,26 @@ export default function Charts({ mapElement }: any) {
 
       // set the default actions for the action bar based on the series type
       setDefaultActionBar(scatterPlotActionBarRef, 'scatterSeries');
-
-      // add event listener when selection is made on the chart
-
-      scatterPlotRef.current.addEventListener('arcgisChartsSelectionComplete', handleArcgisChartsSelectionComplete(scatterPlotActionBarRef));
     }
   }, [mapElement]);
+
+  // handle selection. First remove the previous selection, then highlight the new selection
+  // and enable/disable action bar buttons based on selection
+  const handleArcgisChartsSelectionComplete = (actionBarRef: React.RefObject<HTMLArcgisChartsActionBarElement>) => (event: CustomEvent) => {
+    const selectionData = event.detail.selectionOIDs;
+
+    mapElement.highlightSelect?.remove();
+    mapElement.highlightSelect = layerView.highlight(selectionData);
+
+    // enabled/disable action bar buttons based on selection
+    if (selectionData === undefined || selectionData.length === 0) {
+      actionBarRef.current.disableClearSelection = true;
+      actionBarRef.current.disableFilterBySelection = true;
+    } else {
+      actionBarRef.current.disableClearSelection = false;
+      actionBarRef.current.disableFilterBySelection = false;
+    }
+  };
 
   // Register a function that will execute after the current render cycle
   useEffect(() => {
@@ -133,17 +133,19 @@ export default function Charts({ mapElement }: any) {
         Save Charts
       </CalciteButton>
       <CalciteBlock class='chart-block' collapsible heading='Distribution of Water Measurement Data since 1974'>
-        <ArcgisChartsBoxPlot ref={boxPlotRef1}>
+        <ArcgisChartsBoxPlot ref={boxPlotRef1} onArcgisChartsSelectionComplete={handleArcgisChartsSelectionComplete(boxPlotActionBarRef)}>
           <ArcgisChartsActionBar slot='action-bar' ref={boxPlotActionBarRef}></ArcgisChartsActionBar>
         </ArcgisChartsBoxPlot>
         <CalciteIcon scale='s' slot='icon' icon='box-chart'></CalciteIcon>
       </CalciteBlock>
       <CalciteBlock class='chart-block' collapsible heading='Distribution of Water Measurement Data in 2024'>
-        <ArcgisChartsBoxPlot ref={boxPlotRef2}></ArcgisChartsBoxPlot>
+        <ArcgisChartsBoxPlot ref={boxPlotRef2} onArcgisChartsSelectionComplete={handleArcgisChartsSelectionComplete(boxPlotActionBarRef)}>
+          <ArcgisChartsActionBar slot='action-bar' ref={boxPlotActionBarRef}></ArcgisChartsActionBar>
+        </ArcgisChartsBoxPlot>
         <CalciteIcon scale='s' slot='icon' icon='box-chart'></CalciteIcon>
       </CalciteBlock>
       <CalciteBlock class='chart-block' collapsible heading='Depth of Water (1974 vs 2024) sized by Saturated Thickness'>
-        <ArcgisChartsScatterPlot ref={scatterPlotRef}>
+        <ArcgisChartsScatterPlot ref={scatterPlotRef} onArcgisChartsSelectionComplete={handleArcgisChartsSelectionComplete(scatterPlotActionBarRef)}>
           <ArcgisChartsActionBar slot='action-bar' ref={scatterPlotActionBarRef}></ArcgisChartsActionBar>
         </ArcgisChartsScatterPlot>
         <CalciteIcon scale='s' slot='icon' icon='graph-scatter-plot'></CalciteIcon>
