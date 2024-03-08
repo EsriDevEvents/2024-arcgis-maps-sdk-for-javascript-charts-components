@@ -1,17 +1,16 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { CalciteIcon, CalciteBlock } from '@esri/calcite-components-react';
+import { CalciteIcon, CalciteBlock, CalciteButton } from '@esri/calcite-components-react';
 
 import { ArcgisChartsActionBar, ArcgisChartsBoxPlot, ArcgisChartsScatterPlot } from '@arcgis/charts-components-react';
 import { ScatterPlotModel } from '@arcgis/charts-model';
 
-import { loadWebmap } from '../functions/load-data';
 import type FeatureLayer from '@arcgis/core/layers/FeatureLayer';
 
 import './Charts.css';
 
 // set the default action bar based on the series type
-function setDefaultActionBar(chartElementId: string, seriesType: string) {
-  const actionBarElement = document.getElementById(chartElementId) as HTMLArcgisChartsActionBarElement;
+function setDefaultActionBar(actionBarRef: any, seriesType: string) {
+  const actionBarElement = actionBarRef.current;
 
   if (actionBarElement !== null) {
     actionBarElement.actionBarHideActionsProps = {
@@ -25,83 +24,99 @@ function setDefaultActionBar(chartElementId: string, seriesType: string) {
 }
 
 export default function Charts({ mapElement }: any) {
-  const boxPlotRef1 = useRef(null);
-  const boxPlotRef2 = useRef(null);
-  const scatterPlotRef = useRef(null);
+  const boxPlotRef1 = useRef<HTMLArcgisChartsBoxPlotElement>(null);
+  const boxPlotRef2 = useRef<HTMLArcgisChartsBoxPlotElement>(null);
+  const scatterPlotRef = useRef<HTMLArcgisChartsScatterPlotElement>(null);
 
-  useEffect(() => {
-    if (mapElement) {
-      // Use mapElement here...
-      console.log(mapElement);
+  const boxPlotActionBarRef = useRef<HTMLArcgisChartsActionBarElement>(null);
+  const scatterPlotActionBarRef = useRef<HTMLArcgisChartsActionBarElement>(null);
+
+  const saveCharts = async () => {
+    if (mapElement !== null) {
+      const webmap = await mapElement.map;
+      const aquiferSaturatedThicknessLayer = webmap.findLayerById('18dfc8cf7b7-layer-16') as FeatureLayer;
+
+      const scatterPlotConfig = scatterPlotRef.current.config;
+      aquiferSaturatedThicknessLayer.charts.push(scatterPlotConfig);
+
+      await webmap.save();
     }
-  }, [mapElement]); // Add mapElement to the dependency array
+  };
 
   // useCallback to prevent the function from being recreated when the component rebuilds
   const initializeChart = useCallback(async () => {
-    const webmap = mapElement.map;
-    console.log(webmap);
+    if (mapElement !== null) {
+      const webmap = await mapElement.map;
+      const view = await mapElement.view;
 
-    const view = mapElement.view;
+      const aquiferSaturatedThicknessLayer = webmap.findLayerById('18dfc8cf7b7-layer-16') as FeatureLayer;
+      const waterDepthPercentageChangeLayer = webmap.findLayerById('18df37f7e52-layer-67') as FeatureLayer;
 
-    const aquiferSaturatedThicknessLayer = webmap.findLayerById('18dfc8cf7b7-layer-16') as FeatureLayer;
-    const waterDepthPercentageChangeLayer = webmap.findLayerById('18df37f7e52-layer-67') as FeatureLayer;
+      const layerView = await view.whenLayerView(waterDepthPercentageChangeLayer);
 
-    const layerView = await view.whenLayerView(waterDepthPercentageChangeLayer);
+      // handle selection
+      const handleArcgisChartsSelectionComplete = (event: CustomEvent) => {
+        mapElement.highlightSelect?.remove();
+        mapElement.highlightSelect = layerView.highlight(event.detail.selectionOIDs);
+      };
 
-    // handle selection
-    const handleArcgisChartsSelectionComplete = (event: CustomEvent) => {
-      mapElement.highlightSelect?.remove();
-      mapElement.highlightSelect = layerView.highlight(event.detail.selectionOIDs);
-    };
+      // =================================================================================================
+      // load in two box plots from the webmap/feature layer
+      const boxPlotConfig1 = waterDepthPercentageChangeLayer.charts[0];
+      const boxPlotConfig2 = waterDepthPercentageChangeLayer.charts[1];
 
-    // =================================================================================================
-    // load in two box plots from the webmap/feature layer
-    const boxPlotConfig1 = waterDepthPercentageChangeLayer.charts[0];
-    const boxPlotConfig2 = waterDepthPercentageChangeLayer.charts[1];
+      boxPlotRef1.current.config = boxPlotConfig1;
+      boxPlotRef1.current.layer = waterDepthPercentageChangeLayer;
 
-    boxPlotRef1.current.config = boxPlotConfig1;
-    boxPlotRef1.current.layer = waterDepthPercentageChangeLayer;
+      boxPlotRef2.current.config = boxPlotConfig2;
+      boxPlotRef2.current.layer = waterDepthPercentageChangeLayer;
 
-    boxPlotRef2.current.config = boxPlotConfig2;
-    boxPlotRef2.current.layer = waterDepthPercentageChangeLayer;
+      boxPlotRef1.current.addEventListener('arcgisChartsSelectionComplete', handleArcgisChartsSelectionComplete);
 
-    boxPlotRef1.current.addEventListener('arcgisChartsSelectionComplete', handleArcgisChartsSelectionComplete);
+      boxPlotRef1.current.addEventListener('arcgisChartsSelectionComplete', (event: CustomEvent) => {
+        const selectionData = event.detail;
+        if (selectionData.selectionOIDs === undefined || selectionData.selectionOIDs.length === 0) {
+          scatterPlotActionBarRef.current.disableClearSelection = true;
+          scatterPlotActionBarRef.current.disableFilterBySelection = true;
+        } else {
+          scatterPlotActionBarRef.current.disableClearSelection = false;
+          scatterPlotActionBarRef.current.disableFilterBySelection = false;
+        }
+      });
 
-    // =================================================================================================
-    // create new scatter plot with charts-model
-    const scatterPlotParams = {
-      layer: aquiferSaturatedThicknessLayer,
-      xAxisFieldName: 'YEAR1974',
-      yAxisFieldName: 'YEAR2022',
-    };
+      // set the default actions for the action bar based on the series type
+      setDefaultActionBar(boxPlotActionBarRef, 'boxPlotSeries');
 
-    const scatterPlotModel = new ScatterPlotModel(scatterPlotParams);
+      // =================================================================================================
+      // create new scatter plot with charts-model
+      const scatterPlotParams = {
+        layer: aquiferSaturatedThicknessLayer,
+        xAxisFieldName: 'YEAR1974',
+        yAxisFieldName: 'YEAR2014',
+      };
 
-    const config = await scatterPlotModel.config;
+      const scatterPlotModel = new ScatterPlotModel(scatterPlotParams);
 
-    scatterPlotRef.current.config = config;
-    scatterPlotRef.current.layer = aquiferSaturatedThicknessLayer;
+      const config = await scatterPlotModel.config;
 
-    // Saving (saving to webmap) ========================================
-    // aquiferSaturatedThicknessLayer.charts.push(config);
-    // webmap.save();
+      scatterPlotRef.current.config = config;
+      scatterPlotRef.current.layer = aquiferSaturatedThicknessLayer;
 
-    // add event listener when selection is made on the chart to enable/disable action bar buttons
-    scatterPlotRef.current.addEventListener('arcgisChartsSelectionComplete', (event: CustomEvent) => {
-      const actionBarElement = document.getElementById('scatter-plot-action-bar') as HTMLArcgisChartsActionBarElement;
+      // add event listener when selection is made on the chart to enable/disable action bar buttons
+      scatterPlotRef.current.addEventListener('arcgisChartsSelectionComplete', (event: CustomEvent) => {
+        const selectionData = event.detail;
+        if (selectionData.selectionOIDs === undefined || selectionData.selectionOIDs.length === 0) {
+          scatterPlotActionBarRef.current.disableClearSelection = true;
+          scatterPlotActionBarRef.current.disableFilterBySelection = true;
+        } else {
+          scatterPlotActionBarRef.current.disableClearSelection = false;
+          scatterPlotActionBarRef.current.disableFilterBySelection = false;
+        }
+      });
 
-      const selectionData = event.detail;
-      if (selectionData.selectionOIDs === undefined || selectionData.selectionOIDs.length === 0) {
-        actionBarElement.disableClearSelection = true;
-        actionBarElement.disableFilterBySelection = true;
-      } else {
-        actionBarElement.disableClearSelection = false;
-        actionBarElement.disableFilterBySelection = false;
-      }
-    });
-
-    // set the default actions for the action bar based on the series type
-    setDefaultActionBar('scatter-plot-action-bar', config.series[0].type);
+      // set the default actions for the action bar based on the series type
+      setDefaultActionBar(scatterPlotActionBarRef, 'scatterSeries');
+    }
   }, [mapElement]);
 
   // Register a function that will execute after the current render cycle
@@ -111,8 +126,13 @@ export default function Charts({ mapElement }: any) {
 
   return (
     <div data-panel-id='charts'>
+      <CalciteButton kind='inverse' icon-start='save' class='calcite-mode-dark' onClick={saveCharts}>
+        Save Charts
+      </CalciteButton>
       <CalciteBlock class='chart-block' collapsible heading='Distribution of Water Measurement Data since 1974'>
-        <ArcgisChartsBoxPlot ref={boxPlotRef1}></ArcgisChartsBoxPlot>
+        <ArcgisChartsBoxPlot ref={boxPlotRef1}>
+          <ArcgisChartsActionBar slot='action-bar' ref={boxPlotActionBarRef}></ArcgisChartsActionBar>
+        </ArcgisChartsBoxPlot>
         <CalciteIcon scale='s' slot='icon' icon='box-chart'></CalciteIcon>
       </CalciteBlock>
       <CalciteBlock class='chart-block' collapsible heading='Distribution of Water Measurement Data in 2024'>
@@ -121,7 +141,7 @@ export default function Charts({ mapElement }: any) {
       </CalciteBlock>
       <CalciteBlock class='chart-block' collapsible heading='Depth of Water (1974 vs 2024) sized by Saturated Thickness'>
         <ArcgisChartsScatterPlot ref={scatterPlotRef}>
-          <ArcgisChartsActionBar slot='action-bar' id='scatter-plot-action-bar'></ArcgisChartsActionBar>
+          <ArcgisChartsActionBar slot='action-bar' ref={scatterPlotActionBarRef}></ArcgisChartsActionBar>
         </ArcgisChartsScatterPlot>
         <CalciteIcon scale='s' slot='icon' icon='graph-scatter-plot'></CalciteIcon>
       </CalciteBlock>

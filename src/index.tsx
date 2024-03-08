@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import Charts from './components/Charts';
 import {
@@ -11,6 +11,7 @@ import {
   CalciteChipGroup,
   CalciteChip,
   CalciteBlock,
+  CalciteButton,
 } from '@esri/calcite-components-react';
 import { ArcgisMap, ArcgisHome } from '@arcgis/map-components-react';
 
@@ -48,18 +49,9 @@ function App() {
         <CalciteShellPanel slot='panel-start' display-mode='float'>
           <CalciteNavigation class='calcite-mode-dark'>
             <CalciteNavigationLogo id='nav-logo' slot='logo' description='Esri Developer Summit 2024'></CalciteNavigationLogo>
-            <CalciteNavigation slot='navigation-secondary' class='calcite-mode-light'>
-              <div slot='content-end' className='content-end-container'>
-                <CalciteChipGroup label='Map layers' selection-mode='multiple' id='chip-group'>
-                  <CalciteChip value='1' selected>
-                    Aquifer
-                  </CalciteChip>
-                  <CalciteChip value='2' selected>
-                    Wells
-                  </CalciteChip>
-                </CalciteChipGroup>
-              </div>
-            </CalciteNavigation>
+            {/* <CalciteNavigation slot='navigation-secondary' class='calcite-mode-light'>
+              <div slot='content-end' className='content-end-container'></div>
+            </CalciteNavigation> */}
           </CalciteNavigation>
 
           <CalcitePanel>

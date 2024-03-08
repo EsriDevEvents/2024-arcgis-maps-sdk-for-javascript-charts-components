@@ -9,6 +9,6 @@ arcgis-map {
 
 calcite-shell-panel[slot='panel-start'] {
   --calcite-shell-panel-max-width: 80vw;
-  --calcite-shell-panel-width: 640px;
+  --calcite-shell-panel-width: 800px;
   --calcite-shell-panel-min-width: 640px;
 }
