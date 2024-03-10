@@ -11,64 +11,35 @@ interface ChartsProps {
 }
 
 export default function Charts({ mapElement }: ChartsProps) {
-  // Create refs for the box plots and scatter plot
   const boxPlotRef1 = useRef<HTMLArcgisChartsBoxPlotElement>(null);
   const boxPlotRef2 = useRef<HTMLArcgisChartsBoxPlotElement>(null);
   const scatterPlotRef = useRef<HTMLArcgisChartsScatterPlotElement>(null);
 
-  // Create refs for the action bars
-  const boxPlotActionBarRef1 = useRef<HTMLArcgisChartsActionBarElement>(null);
-  const boxPlotActionBarRef2 = useRef<HTMLArcgisChartsActionBarElement>(null);
-  const scatterPlotActionBarRef = useRef<HTMLArcgisChartsActionBarElement>(null);
+  // STEP 2: Create ref for the action bar
+  const actionBarRef = useRef<HTMLArcgisChartsActionBarElement>(null);
 
-  // Create state for the layer view
+  // STEP 3: Create state for the layer view, this will be used for the selection complete event
   const [layerView, setLayerView] = useState(null);
 
-  // Define the highlight select, set the typing to IHandle (a handle to a highlight call result, can be used to remove the highlight from the view)
-  let highlightSelect: IHandle | undefined;
-
-  // Function to save the charts
-  const saveCharts = async () => {
-    if (mapElement !== null) {
-      // Get the webmap from the map element
-      const webmap = mapElement.map;
-
-      // Get the aquiferSaturatedThicknessLayer from the webmap
-      const aquiferSaturatedThicknessLayer = webmap.findLayerById('18dfc8cf7b7-layer-16') as FeatureLayer;
-
-      // Get the scatter plot config
-      const scatterPlotConfig = scatterPlotRef.current.config;
-
-      // Push the scatter plot config to the charts of the aquiferSaturatedThicknessLayer
-      aquiferSaturatedThicknessLayer.charts.push(scatterPlotConfig);
-
-      // Save the webmap
-      await webmap.save();
-    }
-  };
-
-  // Function to initialize the chart
   const initializeChart = useCallback(async () => {
     if (mapElement !== null) {
-      // Get the webmap and view from the map element
-      const webmap = mapElement.map;
+      const map = mapElement.map;
+
+      // STEP 4: Get the view from the map element
       const view = mapElement.view;
 
-      // Get the aquiferSaturatedThicknessLayer and waterDepthPercentageChangeLayer from the webmap
-      const aquiferSaturatedThicknessLayer = webmap.findLayerById('18dfc8cf7b7-layer-16') as FeatureLayer;
-      const waterDepthPercentageChangeLayer = webmap.findLayerById('18df37f7e52-layer-67') as FeatureLayer;
+      const aquiferSaturatedThicknessLayer = map.findLayerById('18dfc8cf7b7-layer-16') as FeatureLayer;
+      const waterDepthPercentageChangeLayer = map.findLayerById('18df37f7e52-layer-67') as FeatureLayer;
 
-      // Get the layer view for the waterDepthPercentageChangeLayer
+      // STEP 5: Get the layer view for the waterDepthPercentageChangeLayer
       const layerView = await view.whenLayerView(waterDepthPercentageChangeLayer);
 
-      // Set the layer view
+      // STEP 6: Set the layer view
       setLayerView(layerView);
 
-      // Get the box plot configs from the waterDepthPercentageChangeLayer
       const boxPlotConfig1 = waterDepthPercentageChangeLayer.charts[0];
       const boxPlotConfig2 = waterDepthPercentageChangeLayer.charts[1];
 
-      // Set the configs and layer for the box plots
       boxPlotRef1.current.config = boxPlotConfig1;
       boxPlotRef1.current.layer = waterDepthPercentageChangeLayer;
 
@@ -76,42 +47,36 @@ export default function Charts({ mapElement }: ChartsProps) {
       boxPlotRef2.current.layer = waterDepthPercentageChangeLayer;
 
       // Set the default actions for the box plot action bar
-      setDefaultActionBar(boxPlotActionBarRef1.current, 'boxPlotSeries');
-      setDefaultActionBar(boxPlotActionBarRef2.current, 'boxPlotSeries');
+      setDefaultActionBar(actionBarRef.current, 'boxPlotSeries');
 
       // ================================================ Scatterplot (with Model) ===================================================
-      // Define the scatter plot params
       const scatterPlotParams = {
         layer: aquiferSaturatedThicknessLayer,
-        xAxisFieldName: 'YEAR1974',
+        xAxisFieldName: 'YEAR1984',
         yAxisFieldName: 'YEAR2014',
       };
 
-      // Create a new scatter plot model with the scatter plot params
       const scatterPlotModel = new ScatterPlotModel(scatterPlotParams);
-
-      // Get the config from the scatter plot model
       const config = await scatterPlotModel.config;
 
-      // Set the config and layer for the scatter plot
       scatterPlotRef.current.config = config;
       scatterPlotRef.current.layer = aquiferSaturatedThicknessLayer;
-
-      // Set the default actions for the scatter plot action bar
-      setDefaultActionBar(scatterPlotActionBarRef.current, 'scatterSeries');
     }
   }, [mapElement]);
 
-  // Function to handle the selection complete event
+  // STEP 7: Create a function to handle the selection complete event
   const handleArcgisChartsSelectionComplete = (actionBarRef: React.RefObject<HTMLArcgisChartsActionBarElement>) => (event: CustomEvent) => {
-    // Get the selection data from the event detail which is of type HTMLArcgisChartsBarChartElement["selectionData"]
+    // STEP 8: Define the highlight select, set the typing to IHandle (a handle to a highlight call result, can be used to remove the highlight from the view) from arcgis core
+    let highlightSelect: IHandle | undefined;
+
+    // STEP 9: Get the selection OIDs from the event detail
     const selectionOIDs = event.detail.selectionOIDs;
 
-    // Remove the previous highlight select and set the new one
+    // STEP 10: Remove the previous highlight select and set the new one
     highlightSelect?.remove();
     highlightSelect = layerView.highlight(selectionOIDs);
 
-    // Enable or disable the clear selection and filter by selection buttons based on the selection data
+    // STEP 11: Enable or disable the clear selection and filter by selection buttons based on the selection data
     if (selectionOIDs === undefined || selectionOIDs.length === 0) {
       actionBarRef.current.disableClearSelection = true;
       actionBarRef.current.disableFilterBySelection = true;
@@ -121,40 +86,58 @@ export default function Charts({ mapElement }: ChartsProps) {
     }
   };
 
+  // Function to save the charts
+  const saveCharts = async () => {
+    if (mapElement !== null) {
+      // STEP 1: Get the map from the map element
+      const map = mapElement.map;
+
+      // STEP 2: Get the aquiferSaturatedThicknessLayer from the webmap
+      const aquiferSaturatedThicknessLayer = map.findLayerById('18dfc8cf7b7-layer-16') as FeatureLayer;
+
+      // STEP 3: Get the scatter plot config
+      const scatterPlotConfig = scatterPlotRef.current.config;
+
+      // STEP 4: Push the scatter plot config to the charts of the aquiferSaturatedThicknessLayer
+      aquiferSaturatedThicknessLayer.charts = [];
+      aquiferSaturatedThicknessLayer.charts.push(scatterPlotConfig);
+
+      // STEP 5: Save the map
+      await map.save();
+    }
+  };
+
   // Use effect to initialize the chart
   useEffect(() => {
     initializeChart().catch(console.error);
   }, [initializeChart]);
 
-  // Render the component
   return (
     <div data-panel-id='charts'>
       <CalciteButton kind='inverse' icon-start='save' class='calcite-mode-dark' onClick={saveCharts}>
         Save Charts
       </CalciteButton>
       <CalciteBlock class='chart-block' collapsible heading='Distribution of Water Measurement Data since 1974'>
-        <ArcgisChartsBoxPlot ref={boxPlotRef1} onArcgisChartsSelectionComplete={handleArcgisChartsSelectionComplete(boxPlotActionBarRef1)}>
-          <ArcgisChartsActionBar slot='action-bar' ref={boxPlotActionBarRef1}></ArcgisChartsActionBar>
+        <ArcgisChartsBoxPlot ref={boxPlotRef1} onArcgisChartsSelectionComplete={handleArcgisChartsSelectionComplete(actionBarRef)}>
+          {/* STEP 1: Add the action bar component inside the charts component */}
+          <ArcgisChartsActionBar slot='action-bar' ref={actionBarRef}></ArcgisChartsActionBar>
         </ArcgisChartsBoxPlot>
         <CalciteIcon scale='s' slot='icon' icon='box-chart'></CalciteIcon>
       </CalciteBlock>
       <CalciteBlock class='chart-block' collapsible heading='Distribution of Water Measurement Data in 2024'>
-        <ArcgisChartsBoxPlot ref={boxPlotRef2} onArcgisChartsSelectionComplete={handleArcgisChartsSelectionComplete(boxPlotActionBarRef2)}>
-          <ArcgisChartsActionBar slot='action-bar' ref={boxPlotActionBarRef2}></ArcgisChartsActionBar>
-        </ArcgisChartsBoxPlot>
+        <ArcgisChartsBoxPlot ref={boxPlotRef2}></ArcgisChartsBoxPlot>
         <CalciteIcon scale='s' slot='icon' icon='box-chart'></CalciteIcon>
       </CalciteBlock>
       <CalciteBlock class='chart-block' collapsible heading='Depth of Water (1974 vs 2024) sized by Saturated Thickness'>
-        <ArcgisChartsScatterPlot ref={scatterPlotRef} onArcgisChartsSelectionComplete={handleArcgisChartsSelectionComplete(scatterPlotActionBarRef)}>
-          <ArcgisChartsActionBar slot='action-bar' ref={scatterPlotActionBarRef}></ArcgisChartsActionBar>
-        </ArcgisChartsScatterPlot>
+        <ArcgisChartsScatterPlot ref={scatterPlotRef}></ArcgisChartsScatterPlot>
         <CalciteIcon scale='s' slot='icon' icon='graph-scatter-plot'></CalciteIcon>
       </CalciteBlock>
     </div>
   );
 }
 
-// Function to set the default actions for an action bar
+// STEP 12: You can also customize the action bar by setting some default actions base on chart type.
+// You can hide/show certain controls, or perform custom actions.
 function setDefaultActionBar(actionBarElement: HTMLArcgisChartsActionBarElement, seriesType: string) {
   if (actionBarElement !== null) {
     actionBarElement.actionBarHideActionsProps = {
