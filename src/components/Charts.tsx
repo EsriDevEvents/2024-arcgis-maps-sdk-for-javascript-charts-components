@@ -31,10 +31,10 @@ export default function Charts({ mapElement }: ChartsProps) {
   const saveCharts = async () => {
     if (mapElement !== null) {
       // Get the webmap from the map element
-      const webmap = mapElement.map;
+      const map = mapElement.map;
 
       // Get the aquiferSaturatedThicknessLayer from the webmap
-      const aquiferSaturatedThicknessLayer = webmap.findLayerById('18dfc8cf7b7-layer-16') as FeatureLayer;
+      const aquiferSaturatedThicknessLayer = map.findLayerById('18dfc8cf7b7-layer-16') as FeatureLayer;
 
       // Get the scatter plot config
       const scatterPlotConfig = scatterPlotRef.current.config;
@@ -43,7 +43,7 @@ export default function Charts({ mapElement }: ChartsProps) {
       aquiferSaturatedThicknessLayer.charts.push(scatterPlotConfig);
 
       // Save the webmap
-      await webmap.save();
+      await map.save();
     }
   };
 
