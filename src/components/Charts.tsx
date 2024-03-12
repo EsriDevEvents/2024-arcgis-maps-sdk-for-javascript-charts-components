@@ -111,19 +111,20 @@ export default function Charts({ mapElement }: ChartsProps) {
 
       const emptySelection = (selectionData.selectionOIDs ?? [])?.length === 0;
 
+      // clear previous selection on the map
       highlightSelect?.remove();
-
-      if (emptySelection === false) {
-        highlightSelect = layerView.highlight(selectionData.selectionOIDs);
-      }
 
       // clearing the selection when the OID list is empty
       if (emptySelection) {
+        // clear previous selection on the chart
         boxPlotRef1.current.clearSelection();
         boxPlotRef2.current.clearSelection();
         scatterPlotRef.current.clearSelection();
       } else {
-        // passing the selection to the other components
+        // highlight the selected features on the map component
+        highlightSelect = layerView.highlight(selectionData.selectionOIDs);
+
+        // sync up selection between charts
         boxPlotRef1.current.selectionData = selectionData;
         boxPlotRef2.current.selectionData = selectionData;
         scatterPlotRef.current.selectionData = selectionData;
