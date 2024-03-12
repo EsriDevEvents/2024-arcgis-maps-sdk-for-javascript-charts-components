@@ -28,7 +28,8 @@ export default function Charts({ mapElement }: ChartsProps) {
   let highlightSelect: IHandle | undefined;
 
   // useState on selectionData, so the it can be used to pass selectionData between charts
-  const [selectionData, setSelectionData] = useState(null);
+  let selectionData: any;
+  // const [selectionData, setSelectionData] = useState(null);
 
   // Function to save the charts
   const saveCharts = async () => {
@@ -53,12 +54,12 @@ export default function Charts({ mapElement }: ChartsProps) {
   const initializeChart = useCallback(async () => {
     if (mapElement !== null) {
       // Get the webmap and view from the map element
-      const webmap = mapElement.map;
+      const map = mapElement.map;
       const view = mapElement.view;
 
       // Get the aquiferSaturatedThicknessLayer and waterDepthPercentageChangeLayer from the webmap
-      const aquiferSaturatedThicknessLayer = webmap.findLayerById('18dfc8cf7b7-layer-16') as FeatureLayer;
-      const waterDepthPercentageChangeLayer = webmap.findLayerById('18df37f7e52-layer-67') as FeatureLayer;
+      const aquiferSaturatedThicknessLayer = map.findLayerById('18dfc8cf7b7-layer-16') as FeatureLayer;
+      const waterDepthPercentageChangeLayer = map.findLayerById('18df37f7e52-layer-67') as FeatureLayer;
 
       // Get the layer view for the waterDepthPercentageChangeLayer
       const layerView = await view.whenLayerView(waterDepthPercentageChangeLayer);
@@ -104,26 +105,31 @@ export default function Charts({ mapElement }: ChartsProps) {
   }, [mapElement]);
 
   // Function to handle the selection complete event
-  const handleArcgisChartsSelectionComplete =
-    (actionBarRef: React.RefObject<HTMLArcgisChartsActionBarElement>) => (event: CustomEvent<HTMLArcgisChartsBarChartElement['selectionData']>) => {
-      // Get the selection data from the event detail which is of type HTMLArcgisChartsBarChartElement["selectionData"]
-      const selectionOIDs = event.detail.selectionOIDs;
+  const handleArcgisChartsSelectionComplete = (event: CustomEvent<HTMLArcgisChartsBarChartElement['selectionData']>) => {
+    if (event.detail?.selectionOIDs !== selectionData?.selectionOIDs) {
+      selectionData = event.detail;
 
-      setSelectionData({ selectionOIDs });
+      const emptySelection = (selectionData.selectionOIDs ?? [])?.length === 0;
 
-      // Remove the previous highlight select and set the new one
       highlightSelect?.remove();
-      highlightSelect = layerView.highlight(selectionOIDs);
 
-      // Enable or disable the clear selection and filter by selection buttons based on the selection data
-      if (selectionOIDs === undefined || selectionOIDs.length === 0) {
-        actionBarRef.current.disableClearSelection = true;
-        actionBarRef.current.disableFilterBySelection = true;
-      } else {
-        actionBarRef.current.disableClearSelection = false;
-        actionBarRef.current.disableFilterBySelection = false;
+      if (emptySelection === false) {
+        highlightSelect = layerView.highlight(selectionData.selectionOIDs);
       }
-    };
+
+      // clearing the selection when the OID list is empty
+      if (emptySelection) {
+        boxPlotRef1.current.clearSelection();
+        boxPlotRef2.current.clearSelection();
+        scatterPlotRef.current.clearSelection();
+      } else {
+        // passing the selection to the other components
+        boxPlotRef1.current.selectionData = selectionData;
+        boxPlotRef2.current.selectionData = selectionData;
+        scatterPlotRef.current.selectionData = selectionData;
+      }
+    }
+  };
 
   // Use effect to initialize the chart
   useEffect(() => {
@@ -137,21 +143,13 @@ export default function Charts({ mapElement }: ChartsProps) {
         Save Charts
       </CalciteButton>
       <CalciteBlock class='chart-block' collapsible heading='Distribution of Water Measurement Data since 1974'>
-        <ArcgisChartsBoxPlot
-          ref={boxPlotRef1}
-          selectionData={selectionData}
-          onArcgisChartsSelectionComplete={handleArcgisChartsSelectionComplete(boxPlotActionBarRef1)}
-        >
+        <ArcgisChartsBoxPlot ref={boxPlotRef1} selectionData={selectionData} onArcgisChartsSelectionComplete={handleArcgisChartsSelectionComplete}>
           <ArcgisChartsActionBar slot='action-bar' ref={boxPlotActionBarRef1}></ArcgisChartsActionBar>
         </ArcgisChartsBoxPlot>
         <CalciteIcon scale='s' slot='icon' icon='box-chart'></CalciteIcon>
       </CalciteBlock>
       <CalciteBlock class='chart-block' collapsible heading='Distribution of Water Measurement Data in 2024'>
-        <ArcgisChartsBoxPlot
-          ref={boxPlotRef2}
-          selectionData={selectionData}
-          onArcgisChartsSelectionComplete={handleArcgisChartsSelectionComplete(boxPlotActionBarRef2)}
-        >
+        <ArcgisChartsBoxPlot ref={boxPlotRef2} selectionData={selectionData} onArcgisChartsSelectionComplete={handleArcgisChartsSelectionComplete}>
           <ArcgisChartsActionBar slot='action-bar' ref={boxPlotActionBarRef2}></ArcgisChartsActionBar>
         </ArcgisChartsBoxPlot>
         <CalciteIcon scale='s' slot='icon' icon='box-chart'></CalciteIcon>
@@ -160,7 +158,7 @@ export default function Charts({ mapElement }: ChartsProps) {
         <ArcgisChartsScatterPlot
           ref={scatterPlotRef}
           selectionData={selectionData}
-          onArcgisChartsSelectionComplete={handleArcgisChartsSelectionComplete(scatterPlotActionBarRef)}
+          onArcgisChartsSelectionComplete={handleArcgisChartsSelectionComplete}
         >
           <ArcgisChartsActionBar slot='action-bar' ref={scatterPlotActionBarRef}></ArcgisChartsActionBar>
         </ArcgisChartsScatterPlot>
