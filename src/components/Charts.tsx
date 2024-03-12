@@ -70,37 +70,37 @@ export default function Charts({ mapElement }: ChartsProps) {
 
   // STEP 7: Create a function to handle the selection complete event
   const handleArcgisChartsSelectionComplete = (actionBarRef: React.RefObject<HTMLArcgisChartsActionBarElement>) => (event: CustomEvent) => {
-    if (event.detail?.selectionOIDs !== selectionData?.selectionOIDs) {
-      // STEP 8: Get the selection data from the event
-      // selectionData = event.detail;
-      //
-      // STEP 9: create a variable to check if the selectionOIDs are empty
-      // const emptySelection = (selectionData.selectionOIDs ?? [])?.length === 0;
-      //
-      // STEP 10: Clear previous selections on the map
-      // highlightSelect?.remove();
-      //
-      // STEP 11: If the there're no selection, clear the selectio on all the charts
-      // If there are selection, highlight the selected features on the map component, then sync up selection between charts
-      // if (emptySelection) {
-      //   boxPlotRef1.current.clearSelection();
-      //   boxPlotRef2.current.clearSelection();
-      //   scatterPlotRef.current.clearSelection();
-      //   // Enable or disable the clear selection and filter by selection buttons based on the selection data
-      //   actionBarRef.current.disableClearSelection = true;
-      //   actionBarRef.current.disableFilterBySelection = true;
-      // } else {
-      //   // Highlight the selected features on the map component
-      //   highlightSelect = layerView.highlight(selectionData.selectionOIDs);
-      //   // Sync up selection between charts
-      //   boxPlotRef1.current.selectionData = selectionData;
-      //   boxPlotRef2.current.selectionData = selectionData;
-      //   scatterPlotRef.current.selectionData = selectionData;
-      //   // Enable or disable the clear selection and filter by selection buttons based on the selection data
-      //   actionBarRef.current.disableClearSelection = false;
-      //   actionBarRef.current.disableFilterBySelection = false;
-      // }
-    }
+    // if (event.detail?.selectionOIDs !== selectionData?.selectionOIDs) {
+    // STEP 8: Get the selection data from the event
+    // selectionData = event.detail;
+    //
+    // STEP 9: create a variable to check if the selectionOIDs are empty
+    // const emptySelection = (selectionData.selectionOIDs ?? [])?.length === 0;
+    //
+    // STEP 10: Clear previous selections on the map
+    // highlightSelect?.remove();
+    //
+    // STEP 11: If the there're no selection, clear the selectio on all the charts
+    // If there are selection, highlight the selected features on the map component, then sync up selection between charts
+    // if (emptySelection) {
+    //   boxPlotRef1.current.clearSelection();
+    //   boxPlotRef2.current.clearSelection();
+    //   scatterPlotRef.current.clearSelection();
+    //   // Enable or disable the clear selection and filter by selection buttons based on the selection data
+    //   actionBarRef.current.disableClearSelection = true;
+    //   actionBarRef.current.disableFilterBySelection = true;
+    // } else {
+    //   // Highlight the selected features on the map component
+    //   highlightSelect = layerView.highlight(selectionData.selectionOIDs);
+    //   // Sync up selection between charts
+    //   boxPlotRef1.current.selectionData = selectionData;
+    //   boxPlotRef2.current.selectionData = selectionData;
+    //   scatterPlotRef.current.selectionData = selectionData;
+    //   // Enable or disable the clear selection and filter by selection buttons based on the selection data
+    //   actionBarRef.current.disableClearSelection = false;
+    //   actionBarRef.current.disableFilterBySelection = false;
+    // }
+    // }
   };
   // ================================================ Save Charts ===================================================
   // Function to save the charts
