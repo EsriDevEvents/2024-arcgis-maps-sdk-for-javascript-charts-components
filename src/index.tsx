@@ -13,10 +13,10 @@ defineCalciteElements(window, { resourcesUrl: 'https://js.arcgis.com/calcite-com
 defineMapElements(window, { resourcesUrl: 'https://js.arcgis.com/map-components/4.29/assets' });
 
 // STEP 1: Import the defineCustomElements function from the charts-components package
-// import { defineCustomElements as defineChartsElements } from '@arcgis/charts-components/dist/loader';
+import { defineCustomElements as defineChartsElements } from '@arcgis/charts-components/dist/loader';
 
-// STEP 2: Define the charts elements in the browser, and load the necessary assets from the CDN
-// defineChartsElements(window, { resourcesUrl: 'https://js.arcgis.com/charts-components/4.29/t9n' });
+// STEP 2: Register the custom elements in the browser, and load the necessary assets from the CDN
+defineChartsElements(window, { resourcesUrl: 'https://js.arcgis.com/charts-components/4.29/t9n' });
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
@@ -49,7 +49,7 @@ function App() {
 
           <CalcitePanel>
             {/* STEP 3: Include the custom Charts react element with the mapElement prop */}
-            {/* <Charts mapElement={mapElement} /> */}
+            <Charts mapElement={mapElement} />
           </CalcitePanel>
         </CalciteShellPanel>
       </CalciteShell>
