@@ -107,7 +107,6 @@ export default function Charts({ mapElement }: ChartsProps) {
       }
     };
   // ================================================ Save Charts ===================================================
-  // Function to save the charts
   const saveCharts = async () => {
     if (mapElement !== null) {
       // STEP 1: Get the map from the map element
@@ -139,7 +138,7 @@ export default function Charts({ mapElement }: ChartsProps) {
         Save Charts
       </CalciteButton>
       <CalciteBlock class='chart-block' collapsible heading='Distribution of Water Measurement Data since 1974'>
-        {/* STEP 1: Add the action bar component inside the charts component */}
+        {/* STEP 1: Add the action bar component inside the charts component, also add the eventListener */}
         <ArcgisChartsBoxPlot ref={boxPlotRef1} onArcgisChartsSelectionComplete={handleArcgisChartsSelectionComplete(actionBarRef)}>
           <ArcgisChartsActionBar slot='action-bar' ref={actionBarRef}></ArcgisChartsActionBar>
         </ArcgisChartsBoxPlot>
